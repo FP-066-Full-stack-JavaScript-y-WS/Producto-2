@@ -1,28 +1,31 @@
-import { iniciarSesion } from "../modules/auth.js";
-import { usuarios } from "../data/datos.js";
+import { loginUser, getUsers } from "../modules/almacenaje.js";
 
 const formulario = document.getElementById("loginForm");
 const contenedorMensaje = document.getElementById("loginMensaje");
 
-formulario.addEventListener("submit", function (event) {
+formulario.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
-    const resultado = iniciarSesion(email, password);
+    try {
+        const loginCorrecto = await loginUser(email, password);
 
-    if (!resultado.ok) {
-        mostrarMensaje(resultado.mensaje, "danger");
-        return;
+        if (!loginCorrecto) {
+            mostrarMensaje("Credenciales incorrectas. Inténtalo de nuevo.", "danger");
+            return;
+        }
+        mostrarMensaje("Inicio de sesión exitoso. Redirigiendo...", "success");
+        formulario.reset();
+        setTimeout(function () {
+            window.location.href = "dashboard.html";    
+        }, 1500);
+
+    } catch (error) {
+        mostrarMensaje("Error al iniciar sesión. Inténtalo de nuevo.", "danger");
+        console.error("Error en login:", error);
     }
-
-    mostrarMensaje(resultado.mensaje, "success");
-    formulario.reset();
-
-    setTimeout(function () {
-        window.location.href = "dashboard.html";
-    }, 1500);
 });
 
 function mostrarMensaje(texto, tipo) {
@@ -32,29 +35,6 @@ function mostrarMensaje(texto, tipo) {
         </div>
     `;
 }
-
-function mostrarUsuariosPrueba() {
-
-    const lista = document.getElementById("usuarios-prueba");
-    const template = document.getElementById("usuario-template");
-
-    if (!lista || !template) return;
-
-    usuarios.forEach(usuario => {
-
-        const clone = template.content.cloneNode(true);
-
-        clone.querySelector(".usuario-email").textContent = usuario.email;
-        clone.querySelector(".usuario-password").textContent = " / " + usuario.password;
-
-        lista.appendChild(clone);
-
-    });
-
-}
-
-document.addEventListener("DOMContentLoaded", mostrarUsuariosPrueba);
-
 
 /* Prompts IA. IA Usada: ChatGPT
 

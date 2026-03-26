@@ -10,7 +10,12 @@
  * Array con las ofertas de empleo.
  * Cada objeto representa una oferta que se mostrará en el dashboard.
  */
-export const ofertas = [
+
+
+//DEJO EL ARCHIVO COMENTADO ANTES DE ELIMINARLO POR SI HAY QUE REVISAR O RESCATAR INFO
+
+
+/*export const ofertas = [
     {
         id: 1,
         titulo: "Desarrollador Full Stack",
@@ -42,7 +47,7 @@ export const ofertas = [
  * Cada objeto representa una persona que busca empleo
  * o una oportunidad profesional.
  */
-export const demandas = [
+/*export const demandas = [
     {
         id: 1,
         titulo: "Desarrollador Frontend React",
@@ -67,7 +72,7 @@ export const demandas = [
         modalidad: "Híbrido",
         fecha: "Actualizado hace 2 días"
     }
-];
+];/*
 
 //creo un array vacío para guardar cada usuario que se cree
 export const usuarios = [
@@ -89,4 +94,4 @@ export const usuarios = [
         email: "lucia@empleo.com",
         password: "12345678"
     }
-];
+];*/

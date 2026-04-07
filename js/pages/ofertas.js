@@ -1,166 +1,224 @@
-import { ofertas, demandas } from '../data/datos.js';
-import { obtenerUsuarioActual } from '../modules/auth.js';
-// Importamos los datos de prueba y el usuario actual (pero este se gestiona en auth, no? )
+import { addOferta, deleteOferta, getActiveUser, getOfertas } from "../modules/almacenaje.js";
 
-const form = document.getElementById('form-ofertas');
-const tablaGestion = document.getElementById('tabla-gestion');
-const userDisplay = document.getElementById('user-display');
-const totalBadge = document.getElementById('total-badge');
-const contenedor = document.getElementById('contenedor-cards');
+const form = document.getElementById("form-ofertas");
+const tablaGestion = document.getElementById("tabla-gestion");
+const totalBadge = document.getElementById("total-badge");
 
-const usuarioActual = obtenerUsuarioActual();
-// 1. Mostrar usuario compartido
-if (userDisplay && usuarioActual) {
-    userDisplay.textContent = usuarioActual.email;
-}
-
-/**
- * Función para refrescar el listado de gestión
- */
-function actualizarVista() {
-    if (!tablaGestion) return;
-    tablaGestion.innerHTML = '';
-    
-    const todas = [...ofertas, ...demandas];
-    if (totalBadge) totalBadge.textContent = `${todas.length} anuncios`;
-
-    // Renderizamos ambas categorías
-    ofertas.forEach(item => renderizarFila(item, 'oferta'));
-    demandas.forEach(item => renderizarFila(item, 'demanda'));
-}
-
-function renderizarFila(item, tipo) {
-    const fila = document.createElement('tr');
-    const badgeColor = tipo === 'oferta' ? 'text-primary bg-primary-subtle' : 'text-purple bg-purple-subtle';
-    
-    fila.innerHTML = `
-        <td>
-            <span class="badge ${badgeColor} border-0 px-2 py-1" style="font-size: 0.65rem;">${tipo.toUpperCase()}</span>
-        </td>
-        <td>
-            <div class="fw-bold small mb-0">${item.titulo}</div>
-            <div class="text-muted" style="font-size: 0.8rem;">${item.empresa || item.demandante}</div>
-        </td>
-        <td class="text-end">
-            <button class="btn btn-link text-danger p-0" onclick="eliminarPublicacion(${item.id}, '${tipo}')" title="Dar de baja">
-                <i class="bi bi-trash3-fill" style="font-size: 1.1rem;"></i>
-            </button>
-        </td>
-    `;
-    tablaGestion.appendChild(fila);
-}
-
-/**
- * Lógica para dar de baja (Eliminar)
- */
-window.eliminarPublicacion = (id, tipo) => {
-    if (confirm(`¿Dar de baja esta ${tipo} definitivamente?`)) {
-        const array = tipo === 'oferta' ? ofertas : demandas;
-        const index = array.findIndex(i => i.id === id);
-        
-        if (index !== -1) {
-            array.splice(index, 1);
-            actualizarVista();
-        }
+function validarSalario(min, max) {
+    if ((min && Number(min) < 0) || (max && Number(max) < 0)) {
+        return "El salario no puede ser negativo.";
     }
-};
+    if (min && max && Number(min) > Number(max)) {
+        return "El salario mínimo no puede ser mayor que el máximo.";
+    }
+    return null;
+}
 
-/**
- * Lógica para el alta desde el Formulario
- */
-form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const tipo = document.querySelector('input[name="tipo_pub"]:checked').value;
-    const sMin = document.getElementById('salario_min').value;
-    const sMax = document.getElementById('salario_max').value;
+function formatearSalario(min, max) {
+    if (!min && !max) {
+        return "No especificado";
+    }
+    if (min && !max) {
+        return `${min}€`;
+    }
+    if (!min && max) {
+        return `${max}€`;
+    }
+    return `${min}€ - ${max}€`;
+}
 
-    if ((sMin && sMin < 0) || (sMax && sMax < 0)) {
-        alert("El salario no puede ser negativo.");
+function renderizarLista(ofertas = []) {
+    if (!tablaGestion) {
         return;
     }
 
-    if (sMin && sMax && Number (sMin) > Number(sMax)) {
-        alert("El salario mínimo no puede ser mayor que el máximo.");
+    if (totalBadge) {
+        totalBadge.textContent = `${ofertas.length} anuncios`;
+    }
+
+    if (!ofertas.length) {
+        tablaGestion.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center text-muted">Todavía no hay publicaciones registradas.</td>
+            </tr>
+        `;
         return;
     }
 
+    const fragment = document.createDocumentFragment();
 
-    const nuevo = {
-        id: Date.now(),
-        titulo: document.getElementById('titulo').value,
-        ubicacion: document.getElementById('ubicacion').value,
-        modalidad: document.getElementById('modalidad').value,
-        descripcion: document.getElementById('descripcion').value,
-        salario: sMin && sMax ? `${sMin}€ - ${sMax}€` : 'No especificado',
-        fecha: "Hoy",
-        autor: usuarioActual ? usuarioActual.email : "Desconocido"
-    };
+    ofertas.forEach((oferta) => {
+        const fila = document.createElement("tr");
+        const tipo = oferta.tipo === "demanda" ? "demanda" : "oferta";
+        const badgeColor = tipo === "oferta" ? "text-primary bg-primary-subtle" : "text-purple bg-purple-subtle";
 
-    if (tipo === 'oferta') {
-        nuevo.empresa = document.getElementById('entidad').value;
-        ofertas.unshift(nuevo);
-    } else {
-        nuevo.demandante = document.getElementById('entidad').value;
-        demandas.unshift(nuevo);
+        fila.innerHTML = `
+            <td>
+                <span class="badge ${badgeColor} border-0 px-2 py-1" style="font-size: 0.65rem;">${tipo.toUpperCase()}</span>
+            </td>
+            <td>
+                <div class="fw-bold small mb-0">${oferta.titulo}</div>
+                <div class="text-muted" style="font-size: 0.8rem;">${oferta.entidad || "Sin entidad"}</div>
+            </td>
+            <td class="text-end">
+                <button class="btn btn-link text-danger p-0" data-action="delete" data-id="${oferta.id}">
+                    <i class="bi bi-trash3-fill" style="font-size: 1.1rem;"></i>
+                </button>
+            </td>
+        `;
+
+        fragment.appendChild(fila);
+    });
+
+    tablaGestion.innerHTML = "";
+    tablaGestion.appendChild(fragment);
+}
+
+async function cargarOfertas() {
+    try {
+        const registros = await getOfertas();
+        const ordenados = registros.sort((a, b) => (b.id || 0) - (a.id || 0));
+        renderizarLista(ordenados);
+    } catch (error) {
+        console.error(error);
+        renderizarLista();
+        alert("No se pudieron cargar las publicaciones. Inténtalo de nuevo más tarde.");
+    }
+}
+
+async function manejarAlta(event) {
+    event.preventDefault();
+
+    const tipo = document.querySelector("input[name='tipo_pub']:checked")?.value || "oferta";
+    const titulo = document.getElementById("titulo")?.value.trim();
+    const entidad = document.getElementById("entidad")?.value.trim();
+    const ubicacion = document.getElementById("ubicacion")?.value.trim();
+    const modalidad = document.getElementById("modalidad")?.value;
+    const descripcion = document.getElementById("descripcion")?.value.trim();
+    const salarioMin = document.getElementById("salario_min")?.value;
+    const salarioMax = document.getElementById("salario_max")?.value;
+
+    if (!titulo || !entidad || !ubicacion || !modalidad || !descripcion) {
+        alert("Todos los campos obligatorios deben estar completos.");
+        return;
     }
 
-    form.reset();
-    // Reestablecer estilo visual del label de entidad por defecto
-    document.getElementById('label_entidad').innerText = "Nombre de la empresa *";
-    actualizarVista();
-    alert("¡Publicado con éxito!");
-});
+    const salarioError = validarSalario(salarioMin, salarioMax);
+    if (salarioError) {
+        alert(salarioError);
+        return;
+    }
 
-/* Función para activar el selector de tipo de publicación (Oferta/Demanda)
-se mueve del js del html
-*/
-function activarSelectorTipoPublicacion() {
+    try {
+        const registro = {
+            tipo,
+            titulo,
+            entidad,
+            ubicacion,
+            modalidad,
+            descripcion,
+            salario: formatearSalario(salarioMin, salarioMax),
+            usuarioEmail: getActiveUser() || null,
+            fechaCreacion: new Date().toISOString()
+        };
+
+        await addOferta(registro);
+        form?.reset();
+        restablecerSelector();
+        await cargarOfertas();
+        alert("Publicación creada correctamente.");
+    } catch (error) {
+        console.error(error);
+        alert("No se pudo guardar la publicación. Inténtalo de nuevo.");
+    }
+}
+
+async function manejarBorrado(event) {
+    const boton = event.target.closest("[data-action='delete']");
+    if (!boton) {
+        return;
+    }
+
+    const id = Number(boton.dataset.id);
+    if (!id) {
+        return;
+    }
+
+    const confirmado = confirm("¿Deseas eliminar esta publicación?");
+    if (!confirmado) {
+        return;
+    }
+
+    try {
+        await deleteOferta(id);
+        await cargarOfertas();
+    } catch (error) {
+        console.error(error);
+        alert("No se pudo eliminar la publicación. Inténtalo de nuevo.");
+    }
+}
+
+function restablecerSelector() {
+    const radioOferta = document.getElementById("tipo_oferta");
+    if (radioOferta) {
+        radioOferta.checked = true;
+    }
+    actualizarSelectorVisual();
+}
+
+function actualizarSelectorVisual() {
     const radioOferta = document.getElementById("tipo_oferta");
     const radioDemanda = document.getElementById("tipo_demanda");
     const labelEntidad = document.getElementById("label_entidad");
 
-    if (!radioOferta || !radioDemanda || !labelEntidad) return;
+    if (!radioOferta || !radioDemanda || !labelEntidad) {
+        return;
+    }
 
     const boxOferta = radioOferta.nextElementSibling;
     const boxDemanda = radioDemanda.nextElementSibling;
 
-    if (!boxOferta || !boxDemanda) return;
+    if (boxOferta) {
+        boxOferta.classList.toggle("active", radioOferta.checked);
+    }
+    if (boxDemanda) {
+        boxDemanda.classList.toggle("active", radioDemanda.checked);
+    }
 
-    [boxOferta, boxDemanda].forEach((box) => {
-        box.addEventListener("click", () => {
-            boxOferta.classList.toggle("active", box === boxOferta);
-            boxDemanda.classList.toggle("active", box === boxDemanda);
-
-            labelEntidad.innerText =
-                box === boxOferta
-                    ? "Nombre de la empresa *"
-                    : "Tu nombre completo *";
-        });
-    });
+    labelEntidad.innerText = radioOferta.checked ? "Nombre de la empresa *" : "Tu nombre completo *";
 }
-// Carga inicial al entrar en la página
-activarSelectorTipoPublicacion();
-actualizarVista();
 
+function activarSelectorTipoPublicacion() {
+    const radioOferta = document.getElementById("tipo_oferta");
+    const radioDemanda = document.getElementById("tipo_demanda");
 
-// -- PROMPTS UTILIZADOS --> 
-// 
-// Prompt IA 1 (Gemini): 
-// "Función en JavaScript para añadir una nueva oferta o demanda a una tabla HTML y actualizar el contador."
-//
+    if (!radioOferta || !radioDemanda) {
+        return;
+    }
 
-// 
-// Prompt IA 2 (Gemini): 
-// "¿Cómo puedo eliminar una fila de una tabla HTML al pulsar un botón en JavaScript?"
-//
+    [radioOferta, radioDemanda].forEach((input) => {
+        input.addEventListener("change", actualizarSelectorVisual);
+        const caja = input.nextElementSibling;
+        if (caja) {
+            caja.addEventListener("click", () => {
+                input.checked = true;
+                actualizarSelectorVisual();
+            });
+        }
+    });
 
-// 
-// Prompt IA 3 (Gemini): 
-// "¿Cómo puedo cambiar el texto de un label según el tipo seleccionado (oferta/demanda) en un formulario con JS?"
-//
+    actualizarSelectorVisual();
+}
 
-// 
-// Prompt IA 4 (Gemini): 
-// "¿Cómo puedo mostrar un alert de éxito después de enviar un formulario en JavaScript?"
-//
+function init() {
+    if (!form || !tablaGestion) {
+        return;
+    }
+
+    form.addEventListener("submit", manejarAlta);
+    tablaGestion.addEventListener("click", manejarBorrado);
+    activarSelectorTipoPublicacion();
+    cargarOfertas();
+}
+
+init();

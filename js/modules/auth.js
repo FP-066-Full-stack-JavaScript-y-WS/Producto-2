@@ -1,6 +1,6 @@
 import { usuarios } from "../data/datos.js";
 
-let usuarioActual = null;
+const CLAVE_USUARIO_ACTUAL = "usuarioActivo";
 
 function obtenerUsuarios() {
     return usuarios;
@@ -53,8 +53,7 @@ export function registrarUsuario(datosFormulario) {
         password
     };
 
-    listaUsuarios.push(nuevoUsuario);
-    usuarioActual = nuevoUsuario;
+  listaUsuarios.push(nuevoUsuario);
 
     return {
         ok: true,
@@ -85,7 +84,7 @@ export function iniciarSesion(email, password) {
         };
     }
 
-    usuarioActual = usuarioEncontrado;
+   localStorage.setItem(CLAVE_USUARIO_ACTUAL, JSON.stringify(usuarioEncontrado));
 
     return {
         ok: true,
@@ -95,15 +94,21 @@ export function iniciarSesion(email, password) {
 }
 
 export function obtenerUsuarioActual() {
-    return usuarioActual;
+    const usuarioGuardado = localStorage.getItem(CLAVE_USUARIO_ACTUAL);
+
+    if (!usuarioGuardado) {
+        return null;
+    }
+
+    return JSON.parse(usuarioGuardado);
 }
 
 export function cerrarSesion() {
-    usuarioActual = null;
+    localStorage.removeItem(CLAVE_USUARIO_ACTUAL);
 }
 
 export function haySesionActiva() {
-    return usuarioActual !== null;
+    return obtenerUsuarioActual() !== null;
 }
 
 

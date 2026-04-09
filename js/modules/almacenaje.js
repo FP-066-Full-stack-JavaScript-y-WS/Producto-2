@@ -1,3 +1,5 @@
+import { usuarios } from "../data/datos.js";
+
 const DB_NAME = "empleoDB";
 const DB_VERSION = 1;
 const STORE_USUARIOS = "usuarios";
@@ -6,32 +8,37 @@ const ACTIVE_USER_KEY = "usuarioActivo";
 
 export function initDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION); //Abre la base de datos y si no existe la crea
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
 
             if (!db.objectStoreNames.contains(STORE_USUARIOS)) {
-                db.createObjectStore(STORE_USUARIOS, {keyPath: "email"}); //Esto es como si fuera la PK de la tabla en una base de datos
+                db.createObjectStore(STORE_USUARIOS, { keyPath: "email" });
             }
+
             if (!db.objectStoreNames.contains(STORE_OFERTAS)) {
-                db.createObjectStore(STORE_OFERTAS, {keyPath: "id", autoIncrement: true}); //Lo mismo pero con el campo autoincementable
+                db.createObjectStore(STORE_OFERTAS, { keyPath: "id", autoIncrement: true });
             }
         };
 
-        request.onsuccess =() => {
+        request.onsuccess = () => {
             resolve(request.result);
-        }
+        };
 
         request.onerror = () => {
             reject(new Error("Error al abrir la base de datos"));
-        }
+        };
     });
 }
 
-//Funciones CRUD de usuarios
+// ======================================================
+// FUNCIONES CRUD DE USUARIOS
+// ======================================================
+
 export async function addUser(usuario) {
     const db = await initDB();
+
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_USUARIOS, "readwrite");
         const store = transaction.objectStore(STORE_USUARIOS);
@@ -49,6 +56,7 @@ export async function addUser(usuario) {
 
 export async function getUsers() {
     const db = await initDB();
+
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_USUARIOS, "readonly");
         const store = transaction.objectStore(STORE_USUARIOS);
@@ -66,6 +74,7 @@ export async function getUsers() {
 
 export async function deleteUser(email) {
     const db = await initDB();
+
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_USUARIOS, "readwrite");
         const store = transaction.objectStore(STORE_USUARIOS);
@@ -83,6 +92,7 @@ export async function deleteUser(email) {
 
 export async function getUserByEmail(email) {
     const db = await initDB();
+
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_USUARIOS, "readonly");
         const store = transaction.objectStore(STORE_USUARIOS);
@@ -98,10 +108,33 @@ export async function getUserByEmail(email) {
     });
 }
 
-//Funciones CRUD de ofertas/demandas
+// ======================================================
+// SEMILLA DE USUARIOS DE PRUEBA
+// ======================================================
+
+export async function seedUsuariosSiNoExisten() {
+    const listaUsuarios = await getUsers();
+
+    if (listaUsuarios.length > 0) {
+        return;
+    }
+
+    for (const usuario of usuarios) {
+        try {
+            await addUser(usuario);
+        } catch (error) {
+            console.error("Error sembrando usuario de prueba:", error);
+        }
+    }
+}
+
+// ======================================================
+// FUNCIONES CRUD DE OFERTAS / DEMANDAS
+// ======================================================
 
 export async function addOferta(oferta) {
     const db = await initDB();
+
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_OFERTAS, "readwrite");
         const store = transaction.objectStore(STORE_OFERTAS);
@@ -114,11 +147,12 @@ export async function addOferta(oferta) {
         request.onerror = () => {
             reject(new Error("Error al añadir la oferta"));
         };
-    });      
+    });
 }
 
 export async function getOfertas() {
     const db = await initDB();
+
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_OFERTAS, "readonly");
         const store = transaction.objectStore(STORE_OFERTAS);
@@ -130,12 +164,13 @@ export async function getOfertas() {
 
         request.onerror = () => {
             reject(new Error("Error al obtener las ofertas"));
-        };  
+        };
     });
 }
 
 export async function deleteOferta(id) {
     const db = await initDB();
+
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_OFERTAS, "readwrite");
         const store = transaction.objectStore(STORE_OFERTAS);
@@ -151,12 +186,14 @@ export async function deleteOferta(id) {
     });
 }
 
-export async function getOfertasByUser (email) {
+export async function getOfertasByUser(email) {
     const ofertas = await getOfertas();
     return ofertas.filter(oferta => oferta.usuarioEmail === email);
 }
 
-//Funciones de sesión con localStorage
+// ======================================================
+// FUNCIONES DE SESIÓN CON localStorage
+// ======================================================
 
 export function setActiveUser(email) {
     localStorage.setItem(ACTIVE_USER_KEY, email);
@@ -183,4 +220,41 @@ export async function loginUser(email, password) {
 
     setActiveUser(usuario.email);
     return true;
+}
+
+// ======================================================
+// FUNCIONES ADAPTADAS AL ENUNCIADO
+// ======================================================
+
+export async function loguearUsuario(email, password) {
+    const loginCorrecto = await loginUser(email, password);
+
+    if (!loginCorrecto) {
+        return {
+            ok: false,
+            mensaje: "Email o contraseña incorrectos."
+        };
+    }
+
+    const usuario = await obtenerUsuarioActivo();
+
+    return {
+        ok: true,
+        usuario,
+        mensaje: `Bienvenido/a, ${usuario.nombre}.`
+    };
+}
+
+export async function obtenerUsuarioActivo() {
+    const email = getActiveUser();
+
+    if (!email) {
+        return null;
+    }
+
+    return await getUserByEmail(email);
+}
+
+export function cerrarSesion() {
+    logOutUser();
 }

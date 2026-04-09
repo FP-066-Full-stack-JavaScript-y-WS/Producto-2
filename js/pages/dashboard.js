@@ -4,17 +4,15 @@
     Descripción:
     Este archivo controla la lógica del dashboard principal.
     Su función es:
-    - Mostrar el nombre del usuario actual
-    - Pintar las tarjetas de ofertas
-    - Pintar las tarjetas de demandas
+    - Pintar las tarjetas de ofertas desde IndexedDB
+    - Pintar las tarjetas de demandas desde IndexedDB
     - Gestionar eventos básicos de los botones
 =====================================================================*/
 
-import { ofertas, demandas } from "../data/datos.js";
+import { getOfertas } from "../modules/almacenaje.js";
 
 /*=====================================================================
     1. REFERENCIAS A ELEMENTOS DEL DOM
-    Se seleccionan los elementos HTML que se van a manipular.
 =====================================================================*/
 const contenedorOfertas = document.getElementById("contenedor-ofertas");
 const contenedorDemandas = document.getElementById("contenedor-demandas");
@@ -23,109 +21,180 @@ const btnPublicar = document.getElementById("btn-publicar");
 const btnVerOfertas = document.getElementById("btn-ver-ofertas");
 const btnVerDemandas = document.getElementById("btn-ver-demandas");
 
+let tarjetaArrastrada = null; // Variable para almacenar la tarjeta que se está arrastrando
 /*=====================================================================
     2. FUNCIONES DE VISUALIZACIÓN
 =====================================================================*/
 
-/**
- * Genera el HTML de una tarjeta de oferta.
- * @param {Object} oferta - Objeto con los datos de una oferta.
- * @returns {string} HTML de la tarjeta
- */
 function crearTarjetaOferta(oferta) {
     return `
-        <div class="col-12 col-md-6 col-xl-4">
-            <article class="dashboard-card oferta-card">
-                <span class="card-badge badge-oferta">Oferta de empleo</span>
+        <div class="col-12">
+            <article 
+                class="dashboard-item tarjeta-arrastrable"
+                draggable="true"
+                data-id="${oferta.id}"
+                data-tipo="OFERTA"
+                data-titulo="${oferta.titulo ?? ""}"
+                data-fecha="${oferta.fecha ?? ""}"
+                data-descripcion="${oferta.descripcion ?? ""}"
+                data-email="${oferta.email ?? ""}"
+            >
+                <h3 class="dashboard-item-title">
+                    Oferta: ${oferta.titulo ?? "Sin título"}
+                </h3>
 
-                <h3>${oferta.titulo}</h3>
-                <p class="card-subtitle">${oferta.empresa}</p>
+                <p class="dashboard-item-date">
+                    ${oferta.fecha ?? "Sin fecha"}
+                </p>
 
-                <ul class="card-details">
-                    <li><i class="bi bi-geo-alt me-2"></i>${oferta.ubicacion}</li>
-                    <li><i class="bi bi-briefcase me-2"></i>${oferta.modalidad}</li>
-                    <li><i class="bi bi-calendar3 me-2"></i>${oferta.fecha}</li>
-                </ul>
+                <p class="dashboard-item-description">
+                    ${oferta.descripcion ?? "Sin descripción"}
+                </p>
 
-                <button type="button" class="card-button ver-mas-oferta" data-id="${oferta.id}">
-                    <i class="bi bi-eye me-2"></i>Ver más
-                </button>
+                <p class="dashboard-item-user">
+                    Publicado por: ${oferta.email ?? "No disponible"}
+                </p>
             </article>
         </div>
     `;
 }
 
-/**
- * Genera el HTML de una tarjeta de demanda.
- * @param {Object} demanda - Objeto con los datos de una demanda.
- * @returns {string} HTML de la tarjeta
- */
 function crearTarjetaDemanda(demanda) {
     return `
-        <div class="col-12 col-md-6 col-xl-4">
-            <article class="dashboard-card demanda-card">
-                <span class="card-badge badge-demanda">Demanda de empleo</span>
+        <div class="col-12">
+            <article 
+                class="dashboard-item tarjeta-arrastrable"
+                draggable="true"
+                data-id="${demanda.id}"
+                data-tipo="DEMANDA"
+                data-titulo="${demanda.titulo ?? ""}"
+                data-fecha="${demanda.fecha ?? ""}"
+                data-descripcion="${demanda.descripcion ?? ""}"
+                data-email="${demanda.email ?? ""}"
+            >
+                <h3 class="dashboard-item-title">
+                    Demanda: ${demanda.titulo ?? "Sin título"}
+                </h3>
 
-                <h3>${demanda.titulo}</h3>
-                <p class="card-subtitle">Demandante: ${demanda.demandante}</p>
+                <p class="dashboard-item-date">
+                    ${demanda.fecha ?? "Sin fecha"}
+                </p>
 
-                <ul class="card-details">
-                    <li><i class="bi bi-geo-alt me-2"></i>${demanda.ubicacion}</li>
-                    <li><i class="bi bi-briefcase me-2"></i>${demanda.modalidad}</li>
-                    <li><i class="bi bi-calendar3 me-2"></i>${demanda.fecha}</li>
-                </ul>
+                <p class="dashboard-item-description">
+                    ${demanda.descripcion ?? "Sin descripción"}
+                </p>
 
-                <button type="button" class="card-button demanda-btn ver-mas-demanda" data-id="${demanda.id}">
-                    <i class="bi bi-eye me-2"></i>Ver más
-                </button>
+                <p class="dashboard-item-user">
+                    Publicado por: ${demanda.email ?? "No disponible"}
+                </p>
             </article>
         </div>
     `;
 }
 
-/**
- * Inserta en pantalla las ofertas disponibles.
- * Se muestran solo las 3 primeras como resumen del dashboard.
- */
-function pintarOfertas() {
+function pintarOfertas(ofertas) {
+    if (!contenedorOfertas) return;
+
+    if (!ofertas.length) {
+        contenedorOfertas.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-light border text-center">
+                    No hay ofertas registradas.
+                </div>
+            </div>
+        `;
+        return;
+    }
+
     contenedorOfertas.innerHTML = ofertas
         .slice(0, 3)
         .map(crearTarjetaOferta)
         .join("");
 }
 
-/**
- * Inserta en pantalla las demandas disponibles.
- * Se muestran solo las 3 primeras como resumen del dashboard.
- */
-function pintarDemandas() {
+function pintarDemandas(demandas) {
+    if (!contenedorDemandas) return;
+
+    if (!demandas.length) {
+        contenedorDemandas.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-light border text-center">
+                    No hay demandas registradas.
+                </div>
+            </div>
+        `;
+        return;
+    }
+
     contenedorDemandas.innerHTML = demandas
         .slice(0, 3)
         .map(crearTarjetaDemanda)
         .join("");
 }
 
+async function cargarTarjetasDashboard() {
+    try {
+        const anuncios = await getOfertas();
+        console.log("Anuncios cargados desde IndexedDB:", anuncios);
+
+        const ofertas = anuncios.filter(function (anuncio) {
+        return anuncio.tipo && anuncio.tipo.toUpperCase() === "OFERTA";
+        });
+
+        const demandas = anuncios.filter(function (anuncio) {
+        return anuncio.tipo && anuncio.tipo.toUpperCase() === "DEMANDA";
+        });
+
+        pintarOfertas(ofertas);
+        pintarDemandas(demandas);
+
+    } catch (error) {
+        console.error("Error cargando tarjetas del dashboard:", error);
+
+        if (contenedorOfertas) {
+            contenedorOfertas.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger text-center">
+                        Error al cargar las ofertas.
+                    </div>
+                </div>
+            `;
+        }
+
+        if (contenedorDemandas) {
+            contenedorDemandas.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger text-center">
+                        Error al cargar las demandas.
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+
 /*=====================================================================
     3. FUNCIONES DE EVENTOS
 =====================================================================*/
 
-/**
- * Activa los eventos básicos de la página.
- * En este producto se usan alertas porque todavía no existe
- * conexión real entre pantallas ni persistencia de datos.
- */
 function activarEventos() {
-    btnPublicar.addEventListener("click", () => {
-        window.location.href = "ofertas.html";
-    });
+    if (btnPublicar) {
+        btnPublicar.addEventListener("click", () => {
+            window.location.href = "ofertas.html";
+        });
+    }
 
-    btnVerOfertas.addEventListener("click", () => {
-        alert("Aquí se mostrarán todas las ofertas en la siguiente interfaz.");
-    });
+    if (btnVerOfertas) {
+        btnVerOfertas.addEventListener("click", () => {
+            alert("Aquí se mostrarán todas las ofertas en la siguiente interfaz.");
+        });
+    }
 
-    btnVerDemandas.addEventListener("click", () => {
-        alert("Aquí se mostrarán todas las demandas en la siguiente interfaz.");
-    });
+    if (btnVerDemandas) {
+        btnVerDemandas.addEventListener("click", () => {
+            alert("Aquí se mostrarán todas las demandas en la siguiente interfaz.");
+        });
+    }
 
     document.addEventListener("click", (event) => {
         const botonOferta = event.target.closest(".ver-mas-oferta");
@@ -143,25 +212,85 @@ function activarEventos() {
     });
 }
 
+function activarDragAndDrop() { // Función para activar el drag and drop en las tarjetas del dashboard
+    const zonaSeleccion = document.getElementById("zona-seleccion");
+    const mensajeSeleccion = document.getElementById("mensaje-seleccion");
+
+    document.addEventListener("dragstart", function (event) {
+        const tarjeta = event.target.closest(".tarjeta-arrastrable");
+
+        if (!tarjeta) return;
+
+        tarjetaArrastrada = tarjeta;
+        event.dataTransfer.setData("text/plain", tarjeta.dataset.id);
+    });
+
+    if (zonaSeleccion) {
+        zonaSeleccion.addEventListener("dragover", function (event) {
+            event.preventDefault();
+        });
+
+        zonaSeleccion.addEventListener("drop", function (event) {
+            event.preventDefault();
+
+            if (!tarjetaArrastrada) return;
+
+            const id = tarjetaArrastrada.dataset.id;
+            const tipo = tarjetaArrastrada.dataset.tipo;
+            const titulo = tarjetaArrastrada.dataset.titulo;
+            const fecha = tarjetaArrastrada.dataset.fecha;
+            const descripcion = tarjetaArrastrada.dataset.descripcion;
+
+            const yaExiste = zonaSeleccion.querySelector(`[data-id="${id}"][data-tipo="${tipo}"]`);
+            if (yaExiste) {
+                tarjetaArrastrada = null;
+                return;
+            }
+
+            const columna = document.createElement("div");
+            columna.className = "col-12";
+
+           columna.innerHTML = `
+    <article class="dashboard-item" data-id="${id}" data-tipo="${tipo}">
+        <h3 class="dashboard-item-title">
+            ${tipo === "OFERTA" ? "Oferta" : "Demanda"}: ${titulo || "Sin título"}
+        </h3>
+
+        <p class="dashboard-item-date">
+            ${fecha || "Sin fecha"}
+        </p>
+
+        <p class="dashboard-item-description">
+            ${descripcion || "Sin descripción"}
+        </p>
+
+        <p class="dashboard-item-user">
+            Publicado por: ${tarjetaArrastrada.dataset.email || "No disponible"}
+        </p>
+    </article>
+`;
+
+            if (mensajeSeleccion) {
+                mensajeSeleccion.remove();
+            }
+
+            zonaSeleccion.appendChild(columna);
+            tarjetaArrastrada = null;
+        });
+    }
+}
+
 /*=====================================================================
     4. FUNCIÓN PRINCIPAL
 =====================================================================*/
 
-/**
- * Inicializa el dashboard cuando el DOM está cargado.
- */
-function iniciarDashboard() {
-    pintarOfertas();
-    pintarDemandas();
+async function iniciarDashboard() {
+    await cargarTarjetasDashboard();
     activarEventos();
+    activarDragAndDrop();
 }
 
-/* 
-   Espera a que el HTML se cargue completamente
-   antes de ejecutar la lógica de la página.
-*/
 document.addEventListener("DOMContentLoaded", iniciarDashboard);
-
 
 /* Prompts IA. IA Usada: ChatGPT
 

@@ -523,3 +523,75 @@ nav .nav-link {
     font-weight: 500; 
     font-size: 0.9rem; 
     margin-bottom: 8px; }
+
+    /* DASHBOARD DRAG & DROP */
+
+.dashboard-item {
+    background: #eef4ff;
+    border-left: 6px solid #2563eb;
+    border-radius: 0;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    padding: 24px 28px;
+    margin-bottom: 18px;
+    cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-item:active {
+    cursor: grabbing;
+}
+
+.dashboard-item-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: #1f2937;
+    line-height: 1.35;
+}
+
+.dashboard-item-date {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 10px;
+}
+
+.dashboard-item-description {
+    font-size: 1rem;
+    color: #374151;
+    line-height: 1.5;
+    margin-bottom: 18px;
+}
+
+.dashboard-item-user {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0;
+}
+
+#zona-seleccion {
+    min-height: 500px;
+    align-content: flex-start;
+}
+
+#zona-seleccion .dashboard-item {
+    margin-bottom: 16px;
+}
+
+#contenedor-ofertas .col-12,
+#contenedor-demandas .col-12,
+#zona-seleccion .col-12 {
+    margin-bottom: 0;
+}
+
+#contenedor-ofertas,
+#contenedor-demandas,
+#zona-seleccion {
+    row-gap: 16px;
+}

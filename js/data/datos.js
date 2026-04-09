@@ -4,18 +4,14 @@
     Descripción:
     Este archivo almacena los datos de prueba de la aplicación.
     En el Producto 1 no existe base de datos ni persistencia real,
-    por lo que toda la información se guarda en arrays en memoria.*/
+    por lo que toda la información se guarda en arrays en memoria.
+=====================================================================*/
 
 /**
  * Array con las ofertas de empleo.
  * Cada objeto representa una oferta que se mostrará en el dashboard.
  */
-
-
-//DEJO EL ARCHIVO COMENTADO ANTES DE ELIMINARLO POR SI HAY QUE REVISAR O RESCATAR INFO
-
-
-/*export const ofertas = [
+export const ofertas = [
     {
         id: 1,
         titulo: "Desarrollador Full Stack",
@@ -72,9 +68,11 @@
         modalidad: "Híbrido",
         fecha: "Actualizado hace 2 días"
     }
-];/*
+];
 
-//creo un array vacío para guardar cada usuario que se cree
+/**
+ * Array con usuarios de prueba.
+ */
 export const usuarios = [
     {
         id: 1,
@@ -94,4 +92,4 @@ export const usuarios = [
         email: "lucia@empleo.com",
         password: "12345678"
     }
-];*/
+];

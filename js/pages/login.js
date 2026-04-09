@@ -1,7 +1,11 @@
-import { loginUser, getUsers } from "../modules/almacenaje.js";
+import { loguearUsuario, seedUsuariosSiNoExisten } from "../modules/almacenaje.js";
 
 const formulario = document.getElementById("loginForm");
 const contenedorMensaje = document.getElementById("loginMensaje");
+
+document.addEventListener("DOMContentLoaded", async function () {
+    await seedUsuariosSiNoExisten();
+});
 
 formulario.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -10,16 +14,18 @@ formulario.addEventListener("submit", async function (event) {
     const password = document.getElementById("password").value;
 
     try {
-        const loginCorrecto = await loginUser(email, password);
+        const resultado = await loguearUsuario(email, password);
 
-        if (!loginCorrecto) {
-            mostrarMensaje("Credenciales incorrectas. Inténtalo de nuevo.", "danger");
+        if (!resultado.ok) {
+            mostrarMensaje(resultado.mensaje, "danger");
             return;
         }
-        mostrarMensaje("Inicio de sesión exitoso. Redirigiendo...", "success");
+
+        mostrarMensaje(resultado.mensaje, "success");
         formulario.reset();
+
         setTimeout(function () {
-            window.location.href = "dashboard.html";    
+            window.location.href = "dashboard.html";
         }, 1500);
 
     } catch (error) {
@@ -35,12 +41,3 @@ function mostrarMensaje(texto, tipo) {
         </div>
     `;
 }
-
-/* Prompts IA. IA Usada: ChatGPT
-
-- Después de intentar iniciar sesión, quiero mostrar un mensaje en pantalla indicando si ha ido bien o mal, usando estilos de Bootstrap. ¿Cómo puedo hacerlo?
-- Quiero mostrar en la página una lista de usuarios de prueba a partir de un array, usando una plantilla HTML para no repetir código.
-- Necesito que el usuario sea redirigido al dashboard después de iniciar sesión correctamente, pero quiero darle un pequeño tiempo para que vea el mensaje de éxito antes de cambiar de página. ¿Cómo puedo hacerlo?
-- Quiero validar el formulario de login para asegurarme de que el email tiene un formato correcto y que la contraseña no está vacía antes de intentar iniciar sesión. ¿Cómo puedo hacerlo?
-
-*/

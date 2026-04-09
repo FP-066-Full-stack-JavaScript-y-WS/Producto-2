@@ -43,14 +43,34 @@
              SECCIÓN DE OFERTAS DE EMPLEO
         ====================================================== -->
         <section class="dashboard-section">
-            <h2 class="section-title oferta-line">Ofertas de empleo recientes</h2>
+            <div class="row g-4">
 
-            <!-- Contenedor donde JS insertará las tarjetas de ofertas -->
-            <div class="row g-4" id="contenedor-ofertas"></div>
+                <!-- COLUMNA IZQUIERDA: ANUNCIOS DISPONIBLES -->
+                <div class="col-lg-8">
+                    <div class="p-3 border rounded bg-white shadow-sm h-100">
+                        <h2 class="section-title oferta-line mb-4">Anuncios disponibles</h2>
 
-            <!-- Botón para ir a la vista completa de ofertas -->
-            <div class="section-footer">
-                <button id="btn-ver-ofertas" type="button">Ver todas las ofertas</button>
+                        <h3 class="h5 mb-3">Ofertas</h3>
+                        <div class="row g-4 mb-4" id="contenedor-ofertas"></div>
+
+                        <h3 class="h5 mb-3">Demandas</h3>
+                        <div class="row g-4" id="contenedor-demandas"></div>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: SELECCIÓN -->
+                <div class="col-lg-4">
+                    <div class="p-3 border rounded bg-light shadow-sm h-100">
+                        <h2 class="section-title mb-4">Selección</h2>
+
+                        <div id="zona-seleccion" class="row g-3 min-vh-50">
+                            <div class="col-12 text-muted" id="mensaje-seleccion">
+                                Arrastra aquí los anuncios seleccionados.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 

@@ -1,8 +1,10 @@
-import { addOferta, deleteOferta, getActiveUser, getOfertas } from "../modules/almacenaje.js";
+import { addOferta, deleteOferta, getOfertas, obtenerUsuarioActivo } from "../modules/almacenaje.js";
 
 const form = document.getElementById("form-ofertas");
 const tablaGestion = document.getElementById("tabla-gestion");
 const totalBadge = document.getElementById("total-badge");
+const canvasGrafico = document.getElementById("grafico-publicaciones");
+const resumenBadge = document.getElementById("resumen-badge");
 
 function validarSalario(min, max) {
     if ((min && Number(min) < 0) || (max && Number(max) < 0)) {
@@ -74,14 +76,80 @@ function renderizarLista(ofertas = []) {
     tablaGestion.appendChild(fragment);
 }
 
+function dibujarGraficoPublicaciones(publicaciones = []) {
+    if (!canvasGrafico) {
+        return;
+    }
+
+    const ctx = canvasGrafico.getContext("2d");
+    if (!ctx) {
+        return;
+    }
+
+    const totalOfertas = publicaciones.filter(item => item.tipo === "oferta").length;
+    const totalDemandas = publicaciones.filter(item => item.tipo === "demanda").length;
+
+    if (resumenBadge) {
+        resumenBadge.textContent = `${totalOfertas} ofertas · ${totalDemandas} demandas`;
+    }
+
+    const width = canvasGrafico.parentElement.clientWidth;
+    const height = 300;
+
+    canvasGrafico.width = width;
+    canvasGrafico.height = height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const padding = 40;
+    const maxValue = Math.max(totalOfertas, totalDemandas, 1);
+    const baseY = height - padding;
+    const usableHeight = height - padding * 2;
+    const barWidth = 120;
+    const gap = 80;
+    const startX = (width - (barWidth * 2 + gap)) / 2;
+
+    const datos = [
+        { label: "Ofertas", value: totalOfertas, x: startX, color: "#0d6efd" },
+        { label: "Demandas", value: totalDemandas, x: startX + barWidth + gap, color: "#6f42c1" }
+    ];
+
+    ctx.beginPath();
+    ctx.strokeStyle = "#ced4da";
+    ctx.lineWidth = 1;
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, baseY);
+    ctx.lineTo(width - padding, baseY);
+    ctx.stroke();
+
+    datos.forEach((dato) => {
+        const barHeight = (dato.value / maxValue) * usableHeight;
+        const y = baseY - barHeight;
+
+        ctx.fillStyle = dato.color;
+        ctx.fillRect(dato.x, y, barWidth, barHeight);
+
+        ctx.fillStyle = "#212529";
+        ctx.font = "bold 14px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(dato.value, dato.x + barWidth / 2, y - 10);
+
+        ctx.fillStyle = "#495057";
+        ctx.font = "13px Arial";
+        ctx.fillText(dato.label, dato.x + barWidth / 2, baseY + 20);
+    });
+}
+
 async function cargarOfertas() {
     try {
-        const registros = await getOfertas();
+        const registros = await getOfertas(); // sale de IndexedDB
         const ordenados = registros.sort((a, b) => (b.id || 0) - (a.id || 0));
         renderizarLista(ordenados);
+        dibujarGraficoPublicaciones(ordenados);
     } catch (error) {
         console.error(error);
-        renderizarLista();
+        renderizarLista([]);
+        dibujarGraficoPublicaciones([]);
         alert("No se pudieron cargar las publicaciones. Inténtalo de nuevo más tarde.");
     }
 }
@@ -97,6 +165,7 @@ async function manejarAlta(event) {
     const descripcion = document.getElementById("descripcion")?.value.trim();
     const salarioMin = document.getElementById("salario_min")?.value;
     const salarioMax = document.getElementById("salario_max")?.value;
+    const usuario = await obtenerUsuarioActivo();
 
     if (!titulo || !entidad || !ubicacion || !modalidad || !descripcion) {
         alert("Todos los campos obligatorios deben estar completos.");
@@ -118,7 +187,8 @@ async function manejarAlta(event) {
             modalidad,
             descripcion,
             salario: formatearSalario(salarioMin, salarioMax),
-            usuarioEmail: getActiveUser() || null,
+            usuarioEmail: usuario?.email || null,
+            usuarioNombre: usuario?.nombre || null,
             fechaCreacion: new Date().toISOString()
         };
 
@@ -219,6 +289,8 @@ function init() {
     tablaGestion.addEventListener("click", manejarBorrado);
     activarSelectorTipoPublicacion();
     cargarOfertas();
+
+    window.addEventListener("resize", cargarOfertas);
 }
 
 init();

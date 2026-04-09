@@ -524,55 +524,89 @@ nav .nav-link {
     font-size: 0.9rem; 
     margin-bottom: 8px; }
 
-    /* DASHBOARD DRAG & DROP */
+   /* DASHBOARD TARJETAS */
 
 .dashboard-item {
-    background: #eef4ff;
-    border-left: 6px solid #2563eb;
-    border-radius: 0;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    padding: 24px 28px;
-    margin-bottom: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid transparent;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    padding: 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     cursor: grab;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dashboard-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .dashboard-item:active {
     cursor: grabbing;
 }
 
+.dashboard-item-oferta {
+    border-left-color: #3b82f6;
+}
+
+.dashboard-item-demanda {
+    border-left-color: #a855f7;
+}
+
+.dashboard-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.badge-oferta {
+    background: #e8f1ff;
+    color: #3b82f6;
+}
+
+.badge-demanda {
+    background: #f3e8ff;
+    color: #a855f7;
+}
+
 .dashboard-item-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    margin-bottom: 10px;
-    color: #1f2937;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #111827;
     line-height: 1.35;
 }
 
+.dashboard-item-user {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #6b7280;
+}
+
 .dashboard-item-date {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 10px;
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .dashboard-item-description {
-    font-size: 1rem;
+    margin: 0;
+    font-size: 0.95rem;
     color: #374151;
     line-height: 1.5;
-    margin-bottom: 18px;
-}
-
-.dashboard-item-user {
-    font-size: 0.98rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin-bottom: 0;
 }
 
 #zona-seleccion {
@@ -580,18 +614,24 @@ nav .nav-link {
     align-content: flex-start;
 }
 
-#zona-seleccion .dashboard-item {
-    margin-bottom: 16px;
-}
-
-#contenedor-ofertas .col-12,
-#contenedor-demandas .col-12,
-#zona-seleccion .col-12 {
-    margin-bottom: 0;
-}
-
 #contenedor-ofertas,
 #contenedor-demandas,
 #zona-seleccion {
     row-gap: 16px;
+}
+
+.dashboard-item-entity {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.dashboard-item-meta {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }

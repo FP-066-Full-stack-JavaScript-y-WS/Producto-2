@@ -14,82 +14,83 @@ import { getOfertas } from "../modules/almacenaje.js";
 /*=====================================================================
     1. REFERENCIAS A ELEMENTOS DEL DOM
 =====================================================================*/
+const zonaOfertas = document.getElementById("zona-ofertas");
+const zonaDemandas = document.getElementById("zona-demandas");
 const contenedorOfertas = document.getElementById("contenedor-ofertas");
 const contenedorDemandas = document.getElementById("contenedor-demandas");
 
 const btnPublicar = document.getElementById("btn-publicar");
-const btnVerOfertas = document.getElementById("btn-ver-ofertas");
-const btnVerDemandas = document.getElementById("btn-ver-demandas");
 
 let tarjetaArrastrada = null; // Variable para almacenar la tarjeta que se está arrastrando
 /*=====================================================================
     2. FUNCIONES DE VISUALIZACIÓN
 =====================================================================*/
 
-function crearTarjetaOferta(oferta) {
+function crearTarjeta(anuncio, tipo) {
+    const esOferta = tipo === "OFERTA";
+
     return `
-        <div class="col-12">
+        <div class="col-md-6 col-xl-4">
             <article 
-                class="dashboard-item tarjeta-arrastrable"
+                class="dashboard-item ${esOferta ? "dashboard-item-oferta" : "dashboard-item-demanda"} tarjeta-arrastrable"
                 draggable="true"
-                data-id="${oferta.id}"
-                data-tipo="OFERTA"
-                data-titulo="${oferta.titulo ?? ""}"
-                data-fecha="${oferta.fecha ?? ""}"
-                data-descripcion="${oferta.descripcion ?? ""}"
-                data-email="${oferta.email ?? ""}"
+                data-id="${anuncio.id}"
+                data-tipo="${tipo}"
+                data-titulo="${anuncio.titulo ?? ""}"
+                data-entidad="${anuncio.entidad ?? ""}"
+                data-ubicacion="${anuncio.ubicacion ?? ""}"
+                data-modalidad="${anuncio.modalidad ?? ""}"
+                data-fecha="${anuncio.fechaCreacion ?? ""}"
+                data-descripcion="${anuncio.descripcion ?? ""}"
+                data-salario="${anuncio.salario ?? ""}"
+                data-email="${anuncio.usuarioEmail ?? ""}"
+                data-nombre="${anuncio.usuarioNombre ?? ""}"
             >
+                <span class="dashboard-badge ${esOferta ? "badge-oferta" : "badge-demanda"}">
+                    ${esOferta ? "Oferta de empleo" : "Demanda de empleo"}
+                </span>
+
                 <h3 class="dashboard-item-title">
-                    Oferta: ${oferta.titulo ?? "Sin título"}
+                    ${anuncio.titulo ?? "Sin título"}
                 </h3>
 
-                <p class="dashboard-item-date">
-                    ${oferta.fecha ?? "Sin fecha"}
+                <p class="dashboard-item-entity">
+                    ${anuncio.entidad ?? "Sin entidad"}
+                </p>
+
+                <p class="dashboard-item-meta">
+                    <i class="bi bi-geo-alt"></i>
+                    ${anuncio.ubicacion ?? "Ubicación no disponible"}
+                </p>
+
+                <p class="dashboard-item-meta">
+                    <i class="bi bi-briefcase"></i>
+                    ${anuncio.modalidad ?? "Modalidad no especificada"}
+                </p>
+
+                <p class="dashboard-item-meta">
+                    <i class="bi bi-cash-stack"></i>
+                    ${anuncio.salario ?? "Salario no especificado"}
                 </p>
 
                 <p class="dashboard-item-description">
-                    ${oferta.descripcion ?? "Sin descripción"}
+                    ${anuncio.descripcion ?? "Sin descripción"}
                 </p>
 
                 <p class="dashboard-item-user">
-                    Publicado por: ${oferta.email ?? "No disponible"}
+                    ${anuncio.usuarioNombre ?? anuncio.usuarioEmail ?? "Usuario no disponible"}
                 </p>
             </article>
         </div>
     `;
 }
 
+function crearTarjetaOferta(oferta) {
+    return crearTarjeta(oferta, "OFERTA");
+}
+
 function crearTarjetaDemanda(demanda) {
-    return `
-        <div class="col-12">
-            <article 
-                class="dashboard-item tarjeta-arrastrable"
-                draggable="true"
-                data-id="${demanda.id}"
-                data-tipo="DEMANDA"
-                data-titulo="${demanda.titulo ?? ""}"
-                data-fecha="${demanda.fecha ?? ""}"
-                data-descripcion="${demanda.descripcion ?? ""}"
-                data-email="${demanda.email ?? ""}"
-            >
-                <h3 class="dashboard-item-title">
-                    Demanda: ${demanda.titulo ?? "Sin título"}
-                </h3>
-
-                <p class="dashboard-item-date">
-                    ${demanda.fecha ?? "Sin fecha"}
-                </p>
-
-                <p class="dashboard-item-description">
-                    ${demanda.descripcion ?? "Sin descripción"}
-                </p>
-
-                <p class="dashboard-item-user">
-                    Publicado por: ${demanda.email ?? "No disponible"}
-                </p>
-            </article>
-        </div>
-    `;
+    return crearTarjeta(demanda, "DEMANDA");
 }
 
 function pintarOfertas(ofertas) {
@@ -107,7 +108,6 @@ function pintarOfertas(ofertas) {
     }
 
     contenedorOfertas.innerHTML = ofertas
-        .slice(0, 3)
         .map(crearTarjetaOferta)
         .join("");
 }
@@ -127,7 +127,6 @@ function pintarDemandas(demandas) {
     }
 
     contenedorDemandas.innerHTML = demandas
-        .slice(0, 3)
         .map(crearTarjetaDemanda)
         .join("");
 }
@@ -138,11 +137,11 @@ async function cargarTarjetasDashboard() {
         console.log("Anuncios cargados desde IndexedDB:", anuncios);
 
         const ofertas = anuncios.filter(function (anuncio) {
-        return anuncio.tipo && anuncio.tipo.toUpperCase() === "OFERTA";
+            return anuncio.tipo && anuncio.tipo.toUpperCase() === "OFERTA";
         });
 
         const demandas = anuncios.filter(function (anuncio) {
-        return anuncio.tipo && anuncio.tipo.toUpperCase() === "DEMANDA";
+            return anuncio.tipo && anuncio.tipo.toUpperCase() === "DEMANDA";
         });
 
         pintarOfertas(ofertas);
@@ -183,99 +182,236 @@ function activarEventos() {
             window.location.href = "ofertas.html";
         });
     }
-
-    if (btnVerOfertas) {
-        btnVerOfertas.addEventListener("click", () => {
-            alert("Aquí se mostrarán todas las ofertas en la siguiente interfaz.");
-        });
-    }
-
-    if (btnVerDemandas) {
-        btnVerDemandas.addEventListener("click", () => {
-            alert("Aquí se mostrarán todas las demandas en la siguiente interfaz.");
-        });
-    }
-
-    document.addEventListener("click", (event) => {
-        const botonOferta = event.target.closest(".ver-mas-oferta");
-        const botonDemanda = event.target.closest(".ver-mas-demanda");
-
-        if (botonOferta) {
-            const id = botonOferta.dataset.id;
-            alert(`Mostrando detalle de la oferta con ID ${id}.`);
-        }
-
-        if (botonDemanda) {
-            const id = botonDemanda.dataset.id;
-            alert(`Mostrando detalle de la demanda con ID ${id}.`);
-        }
-    });
 }
 
-function activarDragAndDrop() { // Función para activar el drag and drop en las tarjetas del dashboard
+function activarDragAndDrop() {
     const zonaSeleccion = document.getElementById("zona-seleccion");
-    const mensajeSeleccion = document.getElementById("mensaje-seleccion");
 
     document.addEventListener("dragstart", function (event) {
         const tarjeta = event.target.closest(".tarjeta-arrastrable");
-
         if (!tarjeta) return;
 
         tarjetaArrastrada = tarjeta;
         event.dataTransfer.setData("text/plain", tarjeta.dataset.id);
     });
 
-    if (zonaSeleccion) {
-        zonaSeleccion.addEventListener("dragover", function (event) {
+    document.addEventListener("dragend", function () {
+        tarjetaArrastrada = null;
+    });
+
+    function permitirDrop(contenedor) {
+        if (!contenedor) return;
+
+        contenedor.addEventListener("dragover", function (event) {
             event.preventDefault();
         });
+    }
 
+    function crearColumnaTarjeta(tipo, id, titulo, entidad, ubicacion, modalidad, fecha, descripcion, salario, email, nombre, claseColumna) {
+        const columna = document.createElement("div");
+        columna.className = claseColumna;
+
+        columna.innerHTML = `
+        <article 
+            class="dashboard-item ${tipo === "OFERTA" ? "dashboard-item-oferta" : "dashboard-item-demanda"} tarjeta-arrastrable"
+            draggable="true"
+            data-id="${id}"
+            data-tipo="${tipo}"
+            data-titulo="${titulo || ""}"
+            data-entidad="${entidad || ""}"
+            data-ubicacion="${ubicacion || ""}"
+            data-modalidad="${modalidad || ""}"
+            data-fecha="${fecha || ""}"
+            data-descripcion="${descripcion || ""}"
+            data-salario="${salario || ""}"
+            data-email="${email || ""}"
+            data-nombre="${nombre || ""}"
+        >
+            <span class="dashboard-badge ${tipo === "OFERTA" ? "badge-oferta" : "badge-demanda"}">
+                ${tipo === "OFERTA" ? "Oferta de empleo" : "Demanda de empleo"}
+            </span>
+
+            <h3 class="dashboard-item-title">
+                ${titulo || "Sin título"}
+            </h3>
+
+            <p class="dashboard-item-entity">
+                ${entidad || "Sin entidad"}
+            </p>
+
+            <p class="dashboard-item-meta">
+                <i class="bi bi-geo-alt"></i>
+                ${ubicacion || "Ubicación no disponible"}
+            </p>
+
+            <p class="dashboard-item-meta">
+                <i class="bi bi-briefcase"></i>
+                ${modalidad || "Modalidad no especificada"}
+            </p>
+
+            <p class="dashboard-item-meta">
+                <i class="bi bi-cash-stack"></i>
+                ${salario || "Salario no especificado"}
+            </p>
+
+            <p class="dashboard-item-description">
+                ${descripcion || "Sin descripción"}
+            </p>
+
+            <p class="dashboard-item-user">
+                ${nombre || email || "Usuario no disponible"}
+            </p>
+        </article>
+    `;
+
+        return columna;
+    }
+
+    function actualizarMensajeSeleccion() {
+        if (!zonaSeleccion) return;
+
+        const hayTarjetas = zonaSeleccion.querySelector(".dashboard-item");
+        const mensajeExistente = document.getElementById("mensaje-seleccion");
+
+        if (!hayTarjetas && !mensajeExistente) {
+            zonaSeleccion.innerHTML = `
+                <div class="col-12 text-muted" id="mensaje-seleccion">
+                    Arrastra aquí los anuncios seleccionados.
+                </div>
+            `;
+        }
+
+        if (hayTarjetas && mensajeExistente) {
+            mensajeExistente.remove();
+        }
+    }
+
+    function actualizarMensajesDisponibles() {
+        if (contenedorOfertas && !contenedorOfertas.querySelector(".dashboard-item")) {
+            contenedorOfertas.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-light border text-center">
+                        No hay ofertas registradas.
+                    </div>
+                </div>
+            `;
+        }
+
+        if (contenedorDemandas && !contenedorDemandas.querySelector(".dashboard-item")) {
+            contenedorDemandas.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-light border text-center">
+                        No hay demandas registradas.
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function moverTarjeta(destinoContenedor) {
+        if (!tarjetaArrastrada || !destinoContenedor) return;
+
+        const id = tarjetaArrastrada.dataset.id;
+        const tipo = tarjetaArrastrada.dataset.tipo;
+        const titulo = tarjetaArrastrada.dataset.titulo;
+        const entidad = tarjetaArrastrada.dataset.entidad;
+        const ubicacion = tarjetaArrastrada.dataset.ubicacion;
+        const modalidad = tarjetaArrastrada.dataset.modalidad;
+        const fecha = tarjetaArrastrada.dataset.fecha;
+        const descripcion = tarjetaArrastrada.dataset.descripcion;
+        const salario = tarjetaArrastrada.dataset.salario;
+        const email = tarjetaArrastrada.dataset.email;
+        const nombre = tarjetaArrastrada.dataset.nombre;
+
+        const yaExiste = destinoContenedor.querySelector(`[data-id="${id}"][data-tipo="${tipo}"]`);
+        if (yaExiste) {
+            tarjetaArrastrada = null;
+            return;
+        }
+
+        const columnaOriginal = tarjetaArrastrada.closest(".col-12, .col-md-6, .col-xl-4");
+        if (columnaOriginal) {
+            columnaOriginal.remove();
+        }
+
+        const alertaVacia = destinoContenedor.querySelector(".alert");
+        if (alertaVacia) {
+            const colAlerta = alertaVacia.closest(".col-12");
+            if (colAlerta) {
+                colAlerta.remove();
+            }
+        }
+
+        let nuevaColumna;
+
+        if (destinoContenedor === zonaSeleccion) {
+            nuevaColumna = crearColumnaTarjeta(
+                tipo,
+                id,
+                titulo,
+                entidad,
+                ubicacion,
+                modalidad,
+                fecha,
+                descripcion,
+                salario,
+                email,
+                nombre,
+                "col-12"
+            );
+        } else {
+            nuevaColumna = crearColumnaTarjeta(
+                tipo,
+                id,
+                titulo,
+                entidad,
+                ubicacion,
+                modalidad,
+                fecha,
+                descripcion,
+                salario,
+                email,
+                nombre,
+                "col-md-6 col-xl-4"
+            );
+        }
+
+        destinoContenedor.appendChild(nuevaColumna);
+        actualizarMensajeSeleccion();
+        actualizarMensajesDisponibles();
+        tarjetaArrastrada = null;
+    }
+
+    permitirDrop(zonaSeleccion);
+    permitirDrop(zonaOfertas);
+    permitirDrop(zonaDemandas);
+
+    if (zonaSeleccion) {
         zonaSeleccion.addEventListener("drop", function (event) {
+            event.preventDefault();
+            moverTarjeta(zonaSeleccion);
+        });
+    }
+
+    if (zonaOfertas) {
+        zonaOfertas.addEventListener("drop", function (event) {
             event.preventDefault();
 
             if (!tarjetaArrastrada) return;
+            if (tarjetaArrastrada.dataset.tipo !== "OFERTA") return;
 
-            const id = tarjetaArrastrada.dataset.id;
-            const tipo = tarjetaArrastrada.dataset.tipo;
-            const titulo = tarjetaArrastrada.dataset.titulo;
-            const fecha = tarjetaArrastrada.dataset.fecha;
-            const descripcion = tarjetaArrastrada.dataset.descripcion;
+            moverTarjeta(contenedorOfertas);
+        });
+    }
 
-            const yaExiste = zonaSeleccion.querySelector(`[data-id="${id}"][data-tipo="${tipo}"]`);
-            if (yaExiste) {
-                tarjetaArrastrada = null;
-                return;
-            }
+    if (zonaDemandas) {
+        zonaDemandas.addEventListener("drop", function (event) {
+            event.preventDefault();
 
-            const columna = document.createElement("div");
-            columna.className = "col-12";
+            if (!tarjetaArrastrada) return;
+            if (tarjetaArrastrada.dataset.tipo !== "DEMANDA") return;
 
-           columna.innerHTML = `
-    <article class="dashboard-item" data-id="${id}" data-tipo="${tipo}">
-        <h3 class="dashboard-item-title">
-            ${tipo === "OFERTA" ? "Oferta" : "Demanda"}: ${titulo || "Sin título"}
-        </h3>
-
-        <p class="dashboard-item-date">
-            ${fecha || "Sin fecha"}
-        </p>
-
-        <p class="dashboard-item-description">
-            ${descripcion || "Sin descripción"}
-        </p>
-
-        <p class="dashboard-item-user">
-            Publicado por: ${tarjetaArrastrada.dataset.email || "No disponible"}
-        </p>
-    </article>
-`;
-
-            if (mensajeSeleccion) {
-                mensajeSeleccion.remove();
-            }
-
-            zonaSeleccion.appendChild(columna);
-            tarjetaArrastrada = null;
+            moverTarjeta(contenedorDemandas);
         });
     }
 }
@@ -291,12 +427,3 @@ async function iniciarDashboard() {
 }
 
 document.addEventListener("DOMContentLoaded", iniciarDashboard);
-
-/* Prompts IA. IA Usada: ChatGPT
-
-- Cómo puedo mostrar varias cards con los datos de ofertas y demandas a partir de un array de objetos?
-- Necesito limitar la cantidad de cards que aparecen en el dashboard. cómo puedo mostrar solo las 3 primeras ofertas y demandas?
-- Cómo puedo usar la misma estructura de tarjeta para ofertas y demandas sin repetir código?
-- Quiero simular interacciones en mi aplicación (como ver detalles o navegar entre secciones) aunque todavía no tenga todas las páginas desarrolladas. ¿Cómo puedo hacerlo de forma sencilla mientras tanto?
-
-*/

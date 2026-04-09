@@ -110,13 +110,3 @@ export function cerrarSesion() {
 export function haySesionActiva() {
     return obtenerUsuarioActual() !== null;
 }
-
-
-/* Prompts IA. IA Usada: ChatGPT
-
-- Necesito hacer una función de registro en JS que reciba los datos de un formulario y compruebe que no hay campos vacíos. ¿Cómo puedo hacerlo?
-- Tengo que comprobar que el usuario no existe ya en mi array de usuarios antes de registrarlo. ¿Cómo puedo hacer esa validación?
-- Si no tengo persistencia y el estado del usuario se pierde al recargar la página, ¿cómo puedo diseñar igualmente funciones como iniciarSesion, cerrarSesion y comprobar si hay sesión activa dentro de un módulo?
-- Quiero que mi función de registro devuelva un mensaje de error si algo no es correcto, o un mensaje de éxito si el usuario se ha registrado correctamente.
-
-*/

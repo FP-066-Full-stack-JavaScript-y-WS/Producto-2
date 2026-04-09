@@ -1,10 +1,11 @@
-import { loguearUsuario, seedUsuariosSiNoExisten } from "../modules/almacenaje.js";
+import { loguearUsuario } from "../modules/almacenaje.js";
+import { cargarDatosIniciales } from "../data/carga-datos.js";
 
 const formulario = document.getElementById("loginForm");
 const contenedorMensaje = document.getElementById("loginMensaje");
 
 document.addEventListener("DOMContentLoaded", async function () {
-    await seedUsuariosSiNoExisten();
+    await cargarDatosIniciales();
 });
 
 formulario.addEventListener("submit", async function (event) {

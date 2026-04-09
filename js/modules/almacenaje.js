@@ -1,5 +1,3 @@
-import { usuarios } from "../data/datos.js";
-
 const DB_NAME = "empleoDB";
 const DB_VERSION = 1;
 const STORE_USUARIOS = "usuarios";
@@ -22,18 +20,13 @@ export function initDB() {
             }
         };
 
-        request.onsuccess = () => {
-            resolve(request.result);
-        };
-
-        request.onerror = () => {
-            reject(new Error("Error al abrir la base de datos"));
-        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(new Error("Error al abrir la base de datos"));
     });
 }
 
 // ======================================================
-// FUNCIONES CRUD DE USUARIOS
+// CRUD DE USUARIOS
 // ======================================================
 
 export async function addUser(usuario) {
@@ -44,13 +37,8 @@ export async function addUser(usuario) {
         const store = transaction.objectStore(STORE_USUARIOS);
         const request = store.add(usuario);
 
-        request.onsuccess = () => {
-            resolve(true);
-        };
-
-        request.onerror = () => {
-            reject(new Error("Error al añadir el usuario"));
-        };
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => reject(new Error("Error al añadir el usuario"));
     });
 }
 
@@ -62,31 +50,8 @@ export async function getUsers() {
         const store = transaction.objectStore(STORE_USUARIOS);
         const request = store.getAll();
 
-        request.onsuccess = () => {
-            resolve(request.result);
-        };
-
-        request.onerror = () => {
-            reject(new Error("Error al obtener los usuarios"));
-        };
-    });
-}
-
-export async function deleteUser(email) {
-    const db = await initDB();
-
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_USUARIOS, "readwrite");
-        const store = transaction.objectStore(STORE_USUARIOS);
-        const request = store.delete(email);
-
-        request.onsuccess = () => {
-            resolve(true);
-        };
-
-        request.onerror = () => {
-            reject(new Error("Error al eliminar el usuario"));
-        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(new Error("Error al obtener los usuarios"));
     });
 }
 
@@ -98,38 +63,83 @@ export async function getUserByEmail(email) {
         const store = transaction.objectStore(STORE_USUARIOS);
         const request = store.get(email);
 
-        request.onsuccess = () => {
-            resolve(request.result || null);
-        };
-
-        request.onerror = () => {
-            reject(new Error("Error al obtener el usuario por email"));
-        };
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => reject(new Error("Error al obtener el usuario por email"));
     });
 }
 
-// ======================================================
-// SEMILLA DE USUARIOS DE PRUEBA
-// ======================================================
+export async function deleteUser(email) {
+    const db = await initDB();
 
-export async function seedUsuariosSiNoExisten() {
-    const listaUsuarios = await getUsers();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_USUARIOS, "readwrite");
+        const store = transaction.objectStore(STORE_USUARIOS);
+        const request = store.delete(email);
 
-    if (listaUsuarios.length > 0) {
-        return;
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => reject(new Error("Error al eliminar el usuario"));
+    });
+}
+
+export async function registrarUsuario(datosFormulario) {
+    const { nombre, dni, email, telefono, password, confirmPassword } = datosFormulario;
+
+    if (!nombre || !dni || !email || !telefono || !password || !confirmPassword) {
+        return {
+            ok: false,
+            mensaje: "Todos los campos son obligatorios."
+        };
     }
 
-    for (const usuario of usuarios) {
-        try {
-            await addUser(usuario);
-        } catch (error) {
-            console.error("Error sembrando usuario de prueba:", error);
-        }
+    if (password.length < 8) {
+        return {
+            ok: false,
+            mensaje: "La contraseña debe tener al menos 8 caracteres."
+        };
+    }
+
+    if (password !== confirmPassword) {
+        return {
+            ok: false,
+            mensaje: "Las contraseñas no coinciden."
+        };
+    }
+
+    const usuarioExistente = await getUserByEmail(email);
+
+    if (usuarioExistente) {
+        return {
+            ok: false,
+            mensaje: "El email ya está registrado."
+        };
+    }
+
+    const nuevoUsuario = {
+        nombre,
+        dni,
+        email,
+        telefono,
+        password
+    };
+
+    try {
+        await addUser(nuevoUsuario);
+
+        return {
+            ok: true,
+            usuario: nuevoUsuario,
+            mensaje: "Usuario registrado correctamente."
+        };
+    } catch (error) {
+        return {
+            ok: false,
+            mensaje: "No se pudo registrar el usuario."
+        };
     }
 }
 
 // ======================================================
-// FUNCIONES CRUD DE OFERTAS / DEMANDAS
+// CRUD DE OFERTAS
 // ======================================================
 
 export async function addOferta(oferta) {
@@ -140,13 +150,8 @@ export async function addOferta(oferta) {
         const store = transaction.objectStore(STORE_OFERTAS);
         const request = store.add(oferta);
 
-        request.onsuccess = () => {
-            resolve(true);
-        };
-
-        request.onerror = () => {
-            reject(new Error("Error al añadir la oferta"));
-        };
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => reject(new Error("Error al añadir la oferta"));
     });
 }
 
@@ -158,13 +163,8 @@ export async function getOfertas() {
         const store = transaction.objectStore(STORE_OFERTAS);
         const request = store.getAll();
 
-        request.onsuccess = () => {
-            resolve(request.result);
-        };
-
-        request.onerror = () => {
-            reject(new Error("Error al obtener las ofertas"));
-        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(new Error("Error al obtener las ofertas"));
     });
 }
 
@@ -176,23 +176,18 @@ export async function deleteOferta(id) {
         const store = transaction.objectStore(STORE_OFERTAS);
         const request = store.delete(id);
 
-        request.onsuccess = () => {
-            resolve(true);
-        };
-
-        request.onerror = () => {
-            reject(new Error("Error al eliminar la oferta"));
-        };
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => reject(new Error("Error al eliminar la oferta"));
     });
 }
 
 export async function getOfertasByUser(email) {
     const ofertas = await getOfertas();
-    return ofertas.filter(oferta => oferta.usuarioEmail === email);
+    return ofertas.filter((oferta) => oferta.usuarioEmail === email);
 }
 
 // ======================================================
-// FUNCIONES DE SESIÓN CON localStorage
+// SESIÓN CON LOCALSTORAGE
 // ======================================================
 
 export function setActiveUser(email) {
@@ -222,11 +217,14 @@ export async function loginUser(email, password) {
     return true;
 }
 
-// ======================================================
-// FUNCIONES ADAPTADAS AL ENUNCIADO
-// ======================================================
-
 export async function loguearUsuario(email, password) {
+    if (!email || !password) {
+        return {
+            ok: false,
+            mensaje: "Debes completar email y contraseña."
+        };
+    }
+
     const loginCorrecto = await loginUser(email, password);
 
     if (!loginCorrecto) {
@@ -257,4 +255,9 @@ export async function obtenerUsuarioActivo() {
 
 export function cerrarSesion() {
     logOutUser();
+}
+
+export async function haySesionActiva() {
+    const usuario = await obtenerUsuarioActivo();
+    return usuario !== null;
 }

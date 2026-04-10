@@ -1,13 +1,16 @@
 {
+  "$schema": "https://codesandbox.io/schemas/tasks.json",
   "setupTasks": [
     "npm install"
   ],
   "tasks": {
     "start": {
+      "name": "Start app",
       "command": "npm start",
       "runAtStart": true,
       "preview": {
-        "port": 8080
+        "port": 8080,
+        "prLink": "direct"
       }
     }
   }

@@ -1,11 +1,10 @@
 {
-  "$schema": "https://codesandbox.io/schemas/tasks.json",
   "setupTasks": [
     "npm install"
   ],
   "tasks": {
     "start": {
-      "name": "Start static server",
+      "name": "Start app",
       "command": "npm start",
       "runAtStart": true,
       "preview": {

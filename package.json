@@ -1,11 +1,5 @@
 {
-  "name": "nodeninjas-js",
-  "version": "1.0.0",
-  "private": true,
   "scripts": {
-    "start": "npx http-server . -p 8080 -c-1"
-  },
-  "devDependencies": {
-    "http-server": "^14.1.1"
+    "start": "npx serve . -l 8080"
   }
 }

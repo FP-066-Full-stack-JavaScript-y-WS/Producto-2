@@ -4,12 +4,10 @@
   ],
   "tasks": {
     "start": {
-      "name": "Start app",
       "command": "npm start",
       "runAtStart": true,
       "preview": {
-        "port": 8080,
-        "prLink": "direct"
+        "port": 8080
       }
     }
   }
